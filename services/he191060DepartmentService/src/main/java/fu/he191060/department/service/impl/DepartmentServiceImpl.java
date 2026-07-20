@@ -151,7 +151,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         department.setLocation(dto.getLocation() == null ? null : dto.getLocation().trim());
         department.setStatus(dto.getStatus());
         department.setEffectiveDate(dto.getEffectiveDate());
-        department.setParentId(dto.getParentId());
+        department.setParentId(dto.getParentId() == null ? 0L : dto.getParentId());
     }
 
     private void applyProvided(Department department, DepartmentDTO dto) {
@@ -180,6 +180,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 department.getLocation(),
                 department.getStatus(),
                 department.getEffectiveDate(),
-                department.getParentId());
+                Long.valueOf(0L).equals(department.getParentId())
+                        ? null : department.getParentId());
     }
 }

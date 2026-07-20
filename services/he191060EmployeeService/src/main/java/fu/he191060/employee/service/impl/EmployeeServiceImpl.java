@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -29,8 +30,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final ObjectMapper objectMapper;
 
     public EmployeeServiceImpl(EmployeeRepository employeeRepository,
-                               DepartmentClient departmentClient,
-                               ObjectMapper objectMapper) {
+            DepartmentClient departmentClient,
+            ObjectMapper objectMapper) {
         this.employeeRepository = employeeRepository;
         this.departmentClient = departmentClient;
         this.objectMapper = objectMapper;
@@ -50,6 +51,13 @@ public class EmployeeServiceImpl implements EmployeeService {
         validateId(employeeId);
         validate(dto, false);
         Employee employee = find(employeeId);
+        Date startDate = dto.getStartDate() == null
+                ? employee.getStartDate()
+                : dto.getStartDate();
+        Date endDate = dto.getEndDate() == null
+                ? employee.getEndDate()
+                : dto.getEndDate();
+        validateDateRange(startDate, endDate);
         DepartmentDTO department = null;
         if (dto.getDepartment() != null) {
             department = getDepartment(dto.getDepartment().getDepartmentId());
@@ -106,6 +114,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 result.getTotalElements(), result.isFirst(), result.isLast(), content);
     }
 
+    // if (dto.getEmail() != null && (dto.getEmail().isBlank() ||
+    // dto.getEmail().length() > 100
+    // || !dto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))) {
+
     private void validate(EmployeeDTO dto, boolean creating) {
         if (dto == null) {
             throw new BusinessException(2, 400);
@@ -119,8 +131,8 @@ public class EmployeeServiceImpl implements EmployeeService {
                 && (dto.getFullName().isBlank() || dto.getFullName().length() > 100)) {
             throw new BusinessException(2, 400);
         }
-        if (dto.getEmail() != null && (dto.getEmail().isBlank() || dto.getEmail().length() > 100
-                || !dto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))) {
+        if (dto.getEmail() != null
+                && (dto.getEmail().isBlank() || dto.getEmail().length() > 100)) {
             throw new BusinessException(2, 400);
         }
         if (dto.getPosition() != null && !POSITIONS.contains(dto.getPosition())) {
@@ -131,7 +143,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         if (dto.getDepartment() != null
                 && (dto.getDepartment().getDepartmentId() == null
-                || dto.getDepartment().getDepartmentId() <= 0)) {
+                        || dto.getDepartment().getDepartmentId() <= 0)) {
+            throw new BusinessException(2, 400);
+        }
+        validateDateRange(dto.getStartDate(), dto.getEndDate());
+    }
+
+    private void validateDateRange(Date startDate, Date endDate) {
+        if (startDate != null && endDate != null && endDate.before(startDate)) {
             throw new BusinessException(2, 400);
         }
     }
@@ -177,12 +196,18 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private void applyProvided(Employee employee, EmployeeDTO dto) {
-        if (dto.getFullName() != null) employee.setFullName(dto.getFullName().trim());
-        if (dto.getEmail() != null) employee.setEmail(dto.getEmail().trim());
-        if (dto.getPosition() != null) employee.setPosition(dto.getPosition());
-        if (dto.getStatus() != null) employee.setStatus(dto.getStatus());
-        if (dto.getStartDate() != null) employee.setStartDate(dto.getStartDate());
-        if (dto.getEndDate() != null) employee.setEndDate(dto.getEndDate());
+        if (dto.getFullName() != null)
+            employee.setFullName(dto.getFullName().trim());
+        if (dto.getEmail() != null)
+            employee.setEmail(dto.getEmail().trim());
+        if (dto.getPosition() != null)
+            employee.setPosition(dto.getPosition());
+        if (dto.getStatus() != null)
+            employee.setStatus(dto.getStatus());
+        if (dto.getStartDate() != null)
+            employee.setStartDate(dto.getStartDate());
+        if (dto.getEndDate() != null)
+            employee.setEndDate(dto.getEndDate());
         if (dto.getDepartment() != null) {
             employee.setDepartmentId(dto.getDepartment().getDepartmentId());
         }

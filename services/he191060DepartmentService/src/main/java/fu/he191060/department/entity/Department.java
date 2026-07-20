@@ -35,7 +35,7 @@ public class Department {
     @Column(name = "location", length = 100)
     private String location;
 
-    @Column(name = "parent_id")
+    @Column(name = "parent_id", nullable = false)
     private Long parentId;
 
     public Department() {
